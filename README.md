@@ -2,6 +2,9 @@
 
 VSCode extension for running individual Perl subtests using [Test2::Plugin::SubtestFilter](https://metacpan.org/pod/Test2::Plugin::SubtestFilter).
 
+<img width="427" height="363" alt="image" src="https://github.com/user-attachments/assets/5a010317-2067-4cdb-81b5-a569c4f0b01d" />
+
+
 ## Requirements
 
 - **Perl** (5.16 or later recommended)
