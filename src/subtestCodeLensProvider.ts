@@ -38,12 +38,17 @@ export class SubtestCodeLensProvider implements vscode.CodeLensProvider {
         const text = document.getText();
         const lines = text.split('\n');
 
-        // Track nesting level using brace counting
-        const nestingStack: SubtestInfo[] = [];
-        let braceCount = 0;
+        // Track nesting level using improved scope tracking
+        const nestingStack: Array<{info: SubtestInfo, braceLevel: number}> = [];
+        let totalBraceCount = 0;
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
+
+            // Count braces in this line first
+            const openBraces = (line.match(/\{/g) || []).length;
+            const closeBraces = (line.match(/\}/g) || []).length;
+            const netBraces = openBraces - closeBraces;
 
             // Match subtest declarations with various quote styles
             // Supports: subtest 'name' => sub { ... }
@@ -53,7 +58,7 @@ export class SubtestCodeLensProvider implements vscode.CodeLensProvider {
 
             if (subtestMatch) {
                 const name = subtestMatch[1];
-                const currentPath = nestingStack.map(s => s.name);
+                const currentPath = nestingStack.map(item => item.info.name);
 
                 const subtestInfo: SubtestInfo = {
                     name: name,
@@ -62,25 +67,27 @@ export class SubtestCodeLensProvider implements vscode.CodeLensProvider {
                 };
 
                 subtests.push(subtestInfo);
-                nestingStack.push(subtestInfo);
+
+                // Push to stack with current brace level
+                // The subtest's own opening brace is included in openBraces
+                nestingStack.push({
+                    info: subtestInfo,
+                    braceLevel: totalBraceCount + netBraces
+                });
             }
 
-            // Count braces to track nesting
-            const openBraces = (line.match(/\{/g) || []).length;
-            const closeBraces = (line.match(/\}/g) || []).length;
-            braceCount += openBraces - closeBraces;
+            // Update total brace count
+            totalBraceCount += netBraces;
 
-            // Pop from stack when we exit a subtest block
-            // We need to track when the subtest's sub block closes
-            if (nestingStack.length > 0 && closeBraces > 0) {
-                // Simple heuristic: if we see closing braces and the brace count
-                // has decreased significantly, we may have exited a subtest
-                while (nestingStack.length > 0 && braceCount <= 0) {
+            // Pop from stack when we exit subtest blocks
+            while (nestingStack.length > 0) {
+                const lastItem = nestingStack[nestingStack.length - 1];
+                // If current brace level is less than or equal to the subtest's level,
+                // we've exited that subtest
+                if (totalBraceCount <= lastItem.braceLevel - 1) {
                     nestingStack.pop();
-                    if (nestingStack.length > 0) {
-                        // Recalculate brace count relative to parent
-                        braceCount = 1; // Reset for next level
-                    }
+                } else {
+                    break;
                 }
             }
         }

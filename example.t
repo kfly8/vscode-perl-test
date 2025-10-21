@@ -9,8 +9,11 @@ subtest 'basic test' => sub {
 };
 
 subtest 'parent' => sub {
-    subtest 'child' => sub {
+    subtest 'child1' => sub {
         ok 1, 'nested test';
+    };
+    subtest 'child2' => sub {
+        ok 1, 'another nested test';
     };
 };
 
