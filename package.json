@@ -1,0 +1,62 @@
+{
+  "name": "test2-subtest-filter",
+  "displayName": "Test2 Subtest Filter",
+  "description": "Run individual Perl subtests with Test2::Plugin::SubtestFilter",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Testing"
+  ],
+  "activationEvents": [
+    "onLanguage:perl"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "perl",
+        "extensions": [".t", ".pl", ".pm"]
+      }
+    ],
+    "commands": [
+      {
+        "command": "test2-subtest-filter.runSubtest",
+        "title": "Run Subtest"
+      }
+    ],
+    "configuration": {
+      "title": "Test2 Subtest Filter",
+      "properties": {
+        "test2SubtestFilter.proveCommand": {
+          "type": "string",
+          "default": "prove",
+          "description": "Command to run prove (e.g., 'prove' or 'carton exec prove')"
+        },
+        "test2SubtestFilter.proveArgs": {
+          "type": "array",
+          "default": ["-lv"],
+          "description": "Default arguments for prove command"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "20.x",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "@vscode/test-electron": "^2.3.8",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.0"
+  }
+}
