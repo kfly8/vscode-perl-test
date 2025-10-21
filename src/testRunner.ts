@@ -12,8 +12,6 @@ export class TestRunner {
     public async runSubtest(filePath: string, subtestPath: string): Promise<void> {
         this.outputChannel.clear();
         this.outputChannel.appendLine(`Running subtest: ${subtestPath}`);
-        this.outputChannel.appendLine(`File: ${filePath}`);
-        this.outputChannel.appendLine('-'.repeat(80));
 
         try {
             const config = vscode.workspace.getConfiguration('test2SubtestFilter');
@@ -24,19 +22,47 @@ export class TestRunner {
             const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(filePath));
             const cwd = workspaceFolder?.uri.fsPath || path.dirname(filePath);
 
-            // Construct the command
-            const args = [...proveArgs, filePath];
-            const env = {
-                ...process.env,
-                SUBTEST_FILTER: subtestPath
-            };
+            // Convert file path to relative path from workspace
+            const relativeFilePath = path.relative(cwd, filePath);
 
-            this.outputChannel.appendLine(`Command: SUBTEST_FILTER='${subtestPath}' ${proveCommand} ${args.join(' ')}`);
+            this.outputChannel.appendLine(`File: ${relativeFilePath}`);
+            this.outputChannel.appendLine('-'.repeat(80));
+
+            // Check if using docker compose exec or docker exec
+            const dockerExecMatch = proveCommand.match(/^(docker[\s-]compose\s+exec|docker\s+exec)\s+(\S+)\s+(.*)$/i);
+
+            let finalCommand: string;
+            let finalArgs: string[];
+            let env = { ...process.env };
+
+            if (dockerExecMatch) {
+                // docker compose exec <container> <rest>
+                // → docker compose exec <container> env SUBTEST_FILTER='...' <rest>
+                const dockerCmd = dockerExecMatch[1];        // "docker compose exec" or "docker exec"
+                const container = dockerExecMatch[2];        // "app"
+                const restCommand = dockerExecMatch[3];      // "carton exec -- prove"
+
+                // Properly quote the subtest path for shell
+                const quotedSubtestPath = `'${subtestPath.replace(/'/g, "'\\''")}'`;
+
+                finalCommand = `${dockerCmd} ${container} env SUBTEST_FILTER=${quotedSubtestPath} ${restCommand}`;
+                finalArgs = [...proveArgs, relativeFilePath];
+
+                this.outputChannel.appendLine(`Command: ${finalCommand} ${finalArgs.join(' ')}`);
+            } else {
+                // For normal commands, use environment variables
+                finalCommand = proveCommand;
+                finalArgs = [...proveArgs, relativeFilePath];
+                env.SUBTEST_FILTER = subtestPath;
+
+                this.outputChannel.appendLine(`Command: SUBTEST_FILTER='${subtestPath}' ${finalCommand} ${finalArgs.join(' ')}`);
+            }
+
             this.outputChannel.appendLine(`Working directory: ${cwd}`);
             this.outputChannel.appendLine('-'.repeat(80));
             this.outputChannel.appendLine('');
 
-            await this.executeCommand(proveCommand, args, env, cwd);
+            await this.executeCommand(finalCommand, finalArgs, env, cwd);
         } catch (error) {
             this.outputChannel.appendLine('');
             this.outputChannel.appendLine('-'.repeat(80));
