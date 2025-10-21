@@ -3,6 +3,12 @@
   "displayName": "Test2 Subtest Filter",
   "description": "Run individual Perl subtests with Test2::Plugin::SubtestFilter",
   "version": "0.0.1",
+  "publisher": "kfly8",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kfly8/vscode-test2-subtest-filter"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -54,7 +60,9 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint .",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package",
+    "publish": "vsce publish"
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",
@@ -63,6 +71,7 @@
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",
     "@vscode/test-electron": "^2.3.8",
+    "@vscode/vsce": "^3.6.2",
     "eslint": "^8.57.1",
     "globals": "^16.4.0",
     "jiti": "^2.6.1",
