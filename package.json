@@ -1,7 +1,7 @@
 {
   "name": "test2-subtest-filter",
-  "displayName": "Test2 Subtest Filter",
-  "description": "Run individual Perl subtests with Test2::Plugin::SubtestFilter",
+  "displayName": "Perl Test",
+  "description": "Run Perl tests with ease",
   "version": "0.0.3",
   "publisher": "kfly8",
   "license": "MIT",

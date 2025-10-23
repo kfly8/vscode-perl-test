@@ -1,8 +1,6 @@
-# Test2 Subtest Filter - VSCode Extension
+# Perl Test - VSCode Extension
 
-VSCode extension for running individual Perl subtests using [Test2::Plugin::SubtestFilter](https://metacpan.org/pod/Test2::Plugin::SubtestFilter).
-
-Run subtests directly from your editor with visual feedback!
+Run Perl tests with ease - directly from your editor with visual feedback!
 
 <img width="600" alt="image" src="https://github.com/user-attachments/assets/7fa62c56-8430-4b26-a067-23a02ca5afb8" />
 
