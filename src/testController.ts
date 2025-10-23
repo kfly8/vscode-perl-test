@@ -110,8 +110,7 @@ export class Test2SubtestController {
 
         try {
             const config = vscode.workspace.getConfiguration('test2SubtestFilter');
-            const proveCommand = config.get<string>('proveCommand', 'prove');
-            const proveArgs = config.get<string[]>('proveArgs', ['-lv']);
+            const proveCommand = config.get<string>('proveCommand', 'prove -lv');
 
             const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(filePath));
             const cwd = workspaceFolder?.uri.fsPath || path.dirname(filePath);
@@ -120,7 +119,6 @@ export class Test2SubtestController {
             const dockerExecMatch = proveCommand.match(/^(docker[\s-]compose\s+exec|docker\s+exec)\s+(\S+)\s+(.*)$/i);
 
             let finalCommand: string;
-            let finalArgs: string[];
             let env: NodeJS.ProcessEnv = {
                 ...process.env,
                 FORCE_COLOR: '1',
@@ -134,22 +132,20 @@ export class Test2SubtestController {
                 const restCommand = dockerExecMatch[3];
                 const quotedSubtestPath = `'${subtestPath.replace(/'/g, "'\\''")}'`;
 
-                finalCommand = `${dockerCmd} ${container} env SUBTEST_FILTER=${quotedSubtestPath} ${restCommand}`;
-                finalArgs = [...proveArgs, relativeFilePath];
+                finalCommand = `${dockerCmd} ${container} env SUBTEST_FILTER=${quotedSubtestPath} ${restCommand} ${relativeFilePath}`;
 
-                run.appendOutput(`> ${finalCommand} ${finalArgs.join(' ')}\r\n`);
+                run.appendOutput(`> ${finalCommand}\r\n`);
             } else {
-                finalCommand = proveCommand;
-                finalArgs = [...proveArgs, relativeFilePath];
+                finalCommand = `${proveCommand} ${relativeFilePath}`;
                 env.SUBTEST_FILTER = subtestPath;
 
-                run.appendOutput(`> SUBTEST_FILTER='${subtestPath}' ${finalCommand} ${finalArgs.join(' ')}\r\n`);
+                run.appendOutput(`> SUBTEST_FILTER='${subtestPath}' ${finalCommand}\r\n`);
             }
 
             run.appendOutput('\r\n');
 
             const startTime = Date.now();
-            const exitCode = await this.executeCommand(finalCommand, finalArgs, env, cwd, run);
+            const exitCode = await this.executeCommand(finalCommand, env, cwd, run);
             const duration = Date.now() - startTime;
 
             if (exitCode === 0) {
@@ -166,13 +162,12 @@ export class Test2SubtestController {
 
     private executeCommand(
         command: string,
-        args: string[],
         env: NodeJS.ProcessEnv,
         cwd: string,
         run: vscode.TestRun
     ): Promise<number> {
         return new Promise((resolve, reject) => {
-            const process = cp.spawn(command, args, {
+            const process = cp.spawn(command, [], {
                 cwd,
                 env,
                 shell: true

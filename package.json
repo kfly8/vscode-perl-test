@@ -41,15 +41,8 @@
       "properties": {
         "test2SubtestFilter.proveCommand": {
           "type": "string",
-          "default": "prove",
-          "description": "Command to run prove (e.g., 'prove' or 'carton exec prove')"
-        },
-        "test2SubtestFilter.proveArgs": {
-          "type": "array",
-          "default": [
-            "-lv"
-          ],
-          "description": "Default arguments for prove command"
+          "default": "prove -lv",
+          "description": "Command to run prove with arguments (e.g., 'prove -lv', 'carton exec -- prove -lv', or 'docker compose exec app carton exec -- prove -lv')"
         }
       }
     }
