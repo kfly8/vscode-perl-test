@@ -1,42 +1,21 @@
 import * as vscode from 'vscode';
-import { SubtestCodeLensProvider } from './subtestCodeLensProvider';
-import { TestRunner } from './testRunner';
+import { Test2SubtestController } from './testController';
 
-let outputChannel: vscode.OutputChannel;
-let testRunner: TestRunner;
+let testController: Test2SubtestController;
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('Test2 Subtest Filter extension is now active');
 
-    // Create output channel for test results
-    outputChannel = vscode.window.createOutputChannel('Test2 Subtest Filter');
-    testRunner = new TestRunner(outputChannel);
-
-    // Register CodeLens provider for Perl test files
-    const codeLensProvider = new SubtestCodeLensProvider();
-    const codeLensProviderDisposable = vscode.languages.registerCodeLensProvider(
-        { language: 'perl', pattern: '**/*.t' },
-        codeLensProvider
-    );
-
-    // Register command to run subtest
-    const runSubtestCommand = vscode.commands.registerCommand(
-        'test2-subtest-filter.runSubtest',
-        async (filePath: string, subtestPath: string) => {
-            outputChannel.show(true);
-            await testRunner.runSubtest(filePath, subtestPath);
-        }
-    );
+    // Create test controller
+    testController = new Test2SubtestController(context);
 
     context.subscriptions.push(
-        codeLensProviderDisposable,
-        runSubtestCommand,
-        outputChannel
+        testController
     );
 }
 
 export function deactivate() {
-    if (outputChannel) {
-        outputChannel.dispose();
+    if (testController) {
+        testController.dispose();
     }
 }
