@@ -4,7 +4,7 @@ VSCode extension for running individual Perl subtests using [Test2::Plugin::Subt
 
 Run subtests directly from your editor with visual feedback!
 
-<img width="427" height="363" alt="image" src="https://github.com/user-attachments/assets/5a010317-2067-4cdb-81b5-a569c4f0b01d" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/7fa62c56-8430-4b26-a067-23a02ca5afb8" />
 
 ## Features
 
