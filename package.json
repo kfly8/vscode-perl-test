@@ -5,9 +5,10 @@
   "version": "0.0.4",
   "publisher": "kfly8",
   "license": "MIT",
+  "icon": "images/logo.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kfly8/vscode-test2-subtest-filter"
+    "url": "https://github.com/kfly8/vscode-perl-test"
   },
   "engines": {
     "vscode": "^1.85.0"

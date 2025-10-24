@@ -13,3 +13,5 @@ node_modules/**
 .claude/**
 hoge.md
 eslint.config.js
+
+images/logo-original.png
