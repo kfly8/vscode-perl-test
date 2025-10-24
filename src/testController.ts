@@ -6,12 +6,14 @@ import * as fs from 'fs';
 interface SubtestData {
     filePath: string;
     subtestPath: string;
+    testType: 'subtest' | 'test_class';
 }
 
 interface SubtestInfo {
     name: string;
     line: number;
     path: string[];
+    testType: 'subtest' | 'test_class';
 }
 
 export class Test2SubtestController {
@@ -104,7 +106,7 @@ export class Test2SubtestController {
             return;
         }
 
-        const { filePath, subtestPath } = data;
+        const { filePath, subtestPath, testType } = data;
 
         run.started(test);
 
@@ -126,20 +128,23 @@ export class Test2SubtestController {
                 CURE_COLOR: '1'
             };
 
+            const envVarName = testType === 'test_class' ? 'TEST_METHOD' : 'SUBTEST_FILTER';
+            const envValue = subtestPath;
+
             if (dockerExecMatch) {
                 const dockerCmd = dockerExecMatch[1];
                 const container = dockerExecMatch[2];
                 const restCommand = dockerExecMatch[3];
-                const quotedSubtestPath = `'${subtestPath.replace(/'/g, "'\\''")}'`;
+                const quotedValue = `'${envValue.replace(/'/g, "'\\''")}'`;
 
-                finalCommand = `${dockerCmd} ${container} env SUBTEST_FILTER=${quotedSubtestPath} ${restCommand} ${relativeFilePath}`;
+                finalCommand = `${dockerCmd} ${container} env ${envVarName}=${quotedValue} ${restCommand} ${relativeFilePath}`;
 
                 run.appendOutput(`> ${finalCommand}\r\n`);
             } else {
                 finalCommand = `${proveCommand} ${relativeFilePath}`;
-                env.SUBTEST_FILTER = subtestPath;
+                env[envVarName] = envValue;
 
-                run.appendOutput(`> SUBTEST_FILTER='${subtestPath}' ${finalCommand}\r\n`);
+                run.appendOutput(`> ${envVarName}='${envValue}' ${finalCommand}\r\n`);
             }
 
             run.appendOutput('\r\n');
@@ -272,7 +277,8 @@ export class Test2SubtestController {
             // Store test data
             this.testData.set(testItem, {
                 filePath: item.uri.fsPath,
-                subtestPath: subtestPath
+                subtestPath: subtestPath,
+                testType: subtest.testType
             });
 
             item.children.add(testItem);
@@ -319,7 +325,7 @@ export class Test2SubtestController {
     }
 
     /**
-     * Find subtests in a document (copied from SubtestCodeLensProvider)
+     * Find subtests and Test::Class test methods in a document
      */
     private findSubtests(document: vscode.TextDocument): SubtestInfo[] {
         const subtests: SubtestInfo[] = [];
@@ -348,7 +354,8 @@ export class Test2SubtestController {
                 const subtestInfo: SubtestInfo = {
                     name: name,
                     line: i,
-                    path: currentPath
+                    path: currentPath,
+                    testType: 'subtest'
                 };
 
                 subtests.push(subtestInfo);
@@ -358,6 +365,22 @@ export class Test2SubtestController {
                     info: subtestInfo,
                     braceLevel: totalBraceCount + netBraces
                 });
+            }
+
+            // Match Test::Class test methods: sub test_xxx : Test { ... }
+            const testClassMatch = line.match(/^\s*sub\s+(test_\w+)\s*:\s*Tests?\b/);
+
+            if (testClassMatch) {
+                const name = testClassMatch[1];
+
+                const testClassInfo: SubtestInfo = {
+                    name: name,
+                    line: i,
+                    path: [],  // Test::Class methods are not nested
+                    testType: 'test_class'
+                };
+
+                subtests.push(testClassInfo);
             }
 
             // Update total brace count
