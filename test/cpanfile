@@ -1,0 +1,7 @@
+requires 'perl', '5.016';
+
+on 'test' => sub {
+    requires 'Test2::V0';
+    requires 'Test2::Plugin::SubtestFilter', '0.02';
+    requires 'Test::Class';
+};

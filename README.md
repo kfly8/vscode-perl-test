@@ -6,24 +6,20 @@ Run Perl tests with ease - directly from your editor with visual feedback!
 
 ## Features
 
-- **Gutter Decorations**: Test status icons (✓/✗/⚪) appear in the editor gutter
-- **Inline Run Buttons**: Hover over any subtest line to see a ▶ button for instant test execution
+- **Gutter Decorations**: Test status icons (✓/✗) appear in the editor gutter
+- **Selective Test Execution**: Run individual subtests or Test::Class methods
 - **ANSI Color Support**: Full color output with Test2::Formatter::Cute and other formatters
-- **Automatic Discovery**: Tests are automatically detected when you open `.t` files
-- **Real-time Updates**: File watcher keeps test list synchronized
-- **No Extra UI**: Run tests directly from the editor without opening Test Explorer
 
-## Requirements
+## Selective Test Execution
 
-- **Perl** (5.16 or later recommended)
-- **prove** command available in your PATH (usually comes with Perl)
-- **Test2::Plugin::SubtestFilter** - Install this plugin in your project
+This extension enables selective test execution when using the following test modules:
 
-```bash
-cpanm Test2::Plugin::SubtestFilter
-# or
-carton install Test2::Plugin::SubtestFilter
-```
+- [Test2::Plugin::SubtestFilter](https://metacpan.org/pod/Test2::Plugin::SubtestFilter)
+  - Filters subtests by name using the SUBTEST_FILTER environment variable
+- [Test::Class](https://metacpan.org/pod/Test::Class)
+  - Filters test methods using the TEST_METHOD environment variable
+  
+Both can be used together for fine-grained test selection.
 
 ## Configuration
 
@@ -59,17 +55,9 @@ Add to your workspace or user `.vscode/settings.json`:
 **With Custom Formatter:**
 ```json
 {
-  "test2SubtestFilter.proveCommand": "T2_FORMATTER=Cute prove -lv"
+  "test2SubtestFilter.proveCommand": "T2_FORMATTER=Cute perl -Ilib"
 }
 ```
-
-## Usage
-
-1. Open any Perl test file (`.t`)
-2. Subtest status icons appear in the gutter (left of line numbers)
-3. Hover over a subtest line to see the ▶ run button
-4. Click to run that specific subtest
-5. View colored output in the Test Results panel
 
 ## License
 
@@ -77,4 +65,4 @@ MIT
 
 ## Credits
 
-Created for use with [Test2::Plugin::SubtestFilter](https://metacpan.org/pod/Test2::Plugin::SubtestFilter).
+Supports [Test2::Plugin::SubtestFilter](https://metacpan.org/pod/Test2::Plugin::SubtestFilter) and Test::Class for selective test execution.

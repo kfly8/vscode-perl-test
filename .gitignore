@@ -4,3 +4,7 @@ node_modules
 .vscode-test/
 *.vsix
 .DS_Store
+package-lock.json
+
+test/local/
+test/cpanfile.snapshot

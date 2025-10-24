@@ -5,13 +5,15 @@ import * as fs from 'fs';
 
 interface SubtestData {
     filePath: string;
-    subtestPath: string;
+    testMethod?: string;        // Test::Class method name
+    subtestFilter?: string;     // Subtest filter path
 }
 
 interface SubtestInfo {
     name: string;
     line: number;
     path: string[];
+    isTestClassMethod: boolean;  // True if this is a Test::Class method (not a subtest inside it)
 }
 
 export class Test2SubtestController {
@@ -104,7 +106,7 @@ export class Test2SubtestController {
             return;
         }
 
-        const { filePath, subtestPath } = data;
+        const { filePath, testMethod, subtestFilter } = data;
 
         run.started(test);
 
@@ -126,20 +128,35 @@ export class Test2SubtestController {
                 CURE_COLOR: '1'
             };
 
+            // Build environment variables for both TEST_METHOD and SUBTEST_FILTER
+            const envVars: string[] = [];
+            if (testMethod) {
+                env.TEST_METHOD = testMethod;
+                envVars.push(`TEST_METHOD='${testMethod}'`);
+            }
+            if (subtestFilter) {
+                env.SUBTEST_FILTER = subtestFilter;
+                envVars.push(`SUBTEST_FILTER='${subtestFilter}'`);
+            }
+
             if (dockerExecMatch) {
                 const dockerCmd = dockerExecMatch[1];
                 const container = dockerExecMatch[2];
                 const restCommand = dockerExecMatch[3];
-                const quotedSubtestPath = `'${subtestPath.replace(/'/g, "'\\''")}'`;
 
-                finalCommand = `${dockerCmd} ${container} env SUBTEST_FILTER=${quotedSubtestPath} ${restCommand} ${relativeFilePath}`;
+                const envPart = envVars.map(v => {
+                    const [key, value] = v.split('=');
+                    const quotedValue = value.replace(/^'|'$/g, '').replace(/'/g, "'\\''");
+                    return `${key}='${quotedValue}'`;
+                }).join(' ');
+
+                finalCommand = `${dockerCmd} ${container} env ${envPart} ${restCommand} ${relativeFilePath}`;
 
                 run.appendOutput(`> ${finalCommand}\r\n`);
             } else {
                 finalCommand = `${proveCommand} ${relativeFilePath}`;
-                env.SUBTEST_FILTER = subtestPath;
-
-                run.appendOutput(`> SUBTEST_FILTER='${subtestPath}' ${finalCommand}\r\n`);
+                const envPrefix = envVars.length > 0 ? envVars.join(' ') + ' ' : '';
+                run.appendOutput(`> ${envPrefix}${finalCommand}\r\n`);
             }
 
             run.appendOutput('\r\n');
@@ -256,23 +273,57 @@ export class Test2SubtestController {
         // Clear existing children
         item.children.replace([]);
 
+        // Build a set of Test::Class method names for quick lookup
+        const testClassMethods = new Set(
+            subtests
+                .filter(s => s.isTestClassMethod)
+                .map(s => s.name)
+        );
+
         // Add subtests as children
         for (const subtest of subtests) {
-            const subtestPath = [...subtest.path, subtest.name].join(' ');
-            const testId = this.getTestId(item.uri.fsPath, subtestPath);
+            const fullPath = [...subtest.path, subtest.name];
+            const displayPath = fullPath.join(' ');
+            const testId = this.getTestId(item.uri.fsPath, displayPath);
             const range = new vscode.Range(subtest.line, 0, subtest.line, 0);
 
             const testItem = this.controller.createTestItem(
                 testId,
-                subtestPath,
+                displayPath,
                 item.uri
             );
             testItem.range = range;
 
+            // Determine TEST_METHOD and SUBTEST_FILTER based on the path
+            let testMethod: string | undefined;
+            let subtestFilter: string | undefined;
+
+            if (subtest.isTestClassMethod) {
+                // This is a Test::Class method itself
+                testMethod = subtest.name;
+            } else if (subtest.path.length > 0) {
+                // This is a subtest, check if first element is a Test::Class method
+                const firstPath = subtest.path[0];
+
+                if (testClassMethods.has(firstPath)) {
+                    // Subtest inside a Test::Class method
+                    testMethod = firstPath;
+                    const subtestParts = [...subtest.path.slice(1), subtest.name];
+                    subtestFilter = subtestParts.join(' ');
+                } else {
+                    // Regular nested subtest (not inside Test::Class)
+                    subtestFilter = displayPath;
+                }
+            } else {
+                // Top-level subtest (not inside Test::Class)
+                subtestFilter = subtest.name;
+            }
+
             // Store test data
             this.testData.set(testItem, {
                 filePath: item.uri.fsPath,
-                subtestPath: subtestPath
+                testMethod,
+                subtestFilter
             });
 
             item.children.add(testItem);
@@ -319,7 +370,7 @@ export class Test2SubtestController {
     }
 
     /**
-     * Find subtests in a document (copied from SubtestCodeLensProvider)
+     * Find subtests and Test::Class test methods in a document
      */
     private findSubtests(document: vscode.TextDocument): SubtestInfo[] {
         const subtests: SubtestInfo[] = [];
@@ -338,17 +389,40 @@ export class Test2SubtestController {
             const closeBraces = (line.match(/\}/g) || []).length;
             const netBraces = openBraces - closeBraces;
 
-            // Match subtest declarations with various quote styles
-            const subtestMatch = line.match(/^\s*subtest\s+['"](.+?)['"]\s*=>\s*sub\s*\{/);
+            // Match Test::Class test methods: sub test_xxx : Test { ... }
+            const testClassMatch = line.match(/^\s*sub\s+(test_\w+)\s*:\s*Tests?\b/);
+
+            if (testClassMatch) {
+                const name = testClassMatch[1];
+
+                const testClassInfo: SubtestInfo = {
+                    name: name,
+                    line: i,
+                    path: [],  // Test::Class methods are not nested
+                    isTestClassMethod: true
+                };
+
+                subtests.push(testClassInfo);
+
+                // Push Test::Class method to stack so subtests inside it can be tracked
+                nestingStack.push({
+                    info: testClassInfo,
+                    braceLevel: totalBraceCount + netBraces
+                });
+            }
+
+            // Match subtest declarations with various quote styles or bare words
+            const subtestMatch = line.match(/^\s*subtest\s+(?:['"](.+?)['"]|(\w+))\s*=>\s*sub\s*\{/);
 
             if (subtestMatch) {
-                const name = subtestMatch[1];
+                const name = subtestMatch[1] || subtestMatch[2];  // Handle both quoted and bare word groups
                 const currentPath = nestingStack.map(item => item.info.name);
 
                 const subtestInfo: SubtestInfo = {
                     name: name,
                     line: i,
-                    path: currentPath
+                    path: currentPath,
+                    isTestClassMethod: false
                 };
 
                 subtests.push(subtestInfo);
@@ -363,7 +437,7 @@ export class Test2SubtestController {
             // Update total brace count
             totalBraceCount += netBraces;
 
-            // Pop from stack when we exit subtest blocks
+            // Pop from stack when we exit blocks
             while (nestingStack.length > 0) {
                 const lastItem = nestingStack[nestingStack.length - 1];
                 if (totalBraceCount <= lastItem.braceLevel - 1) {
