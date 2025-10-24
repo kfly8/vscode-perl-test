@@ -2,7 +2,7 @@
   "name": "test2-subtest-filter",
   "displayName": "Perl Test",
   "description": "Run Perl tests with ease",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "kfly8",
   "license": "MIT",
   "repository": {
