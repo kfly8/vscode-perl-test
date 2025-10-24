@@ -390,7 +390,8 @@ export class Test2SubtestController {
             const netBraces = openBraces - closeBraces;
 
             // Match Test::Class test methods: sub method_name : Test { ... }
-            const testClassMatch = line.match(/^\s*sub\s+(\w+)\s*:\s*Tests?\b/);
+            // Supports non-ASCII characters (e.g., Japanese method names)
+            const testClassMatch = line.match(/^\s*sub\s+([^\s:]+)\s*:\s*Tests?\b/);
 
             if (testClassMatch) {
                 const name = testClassMatch[1];
