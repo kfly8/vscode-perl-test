@@ -2,7 +2,7 @@
 
 Run Perl tests with ease - directly from your editor with visual feedback!
 
-<img width="600" alt="image" src="https://github.com/user-attachments/assets/7fa62c56-8430-4b26-a067-23a02ca5afb8" />
+<img width="512" height="496" alt="cover" src="https://github.com/user-attachments/assets/0381129c-301b-4463-b0dc-477e0145bdf6" />
 
 ## Features
 
