@@ -411,11 +411,11 @@ export class Test2SubtestController {
                 });
             }
 
-            // Match subtest declarations with various quote styles
-            const subtestMatch = line.match(/^\s*subtest\s+['"](.+?)['"]\s*=>\s*sub\s*\{/);
+            // Match subtest declarations with various quote styles or bare words
+            const subtestMatch = line.match(/^\s*subtest\s+(?:['"](.+?)['"]|(\w+))\s*=>\s*sub\s*\{/);
 
             if (subtestMatch) {
-                const name = subtestMatch[1];
+                const name = subtestMatch[1] || subtestMatch[2];  // Handle both quoted and bare word groups
                 const currentPath = nestingStack.map(item => item.info.name);
 
                 const subtestInfo: SubtestInfo = {
