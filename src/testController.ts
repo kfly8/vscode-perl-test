@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import * as path from 'path';
-import * as fs from 'fs';
+import { buildTestCommand } from './commandBuilder';
 
 interface SubtestData {
     filePath: string;
@@ -118,47 +118,15 @@ export class Test2SubtestController {
             const cwd = workspaceFolder?.uri.fsPath || path.dirname(filePath);
             const relativeFilePath = path.relative(cwd, filePath);
 
-            const dockerExecMatch = proveCommand.match(/^(docker[\s-]compose\s+exec|docker\s+exec)\s+(\S+)\s+(.*)$/i);
+            const { command: finalCommand, displayCommand, env } = buildTestCommand({
+                filePath,
+                relativeFilePath,
+                testMethod,
+                subtestFilter,
+                proveCommand,
+            });
 
-            let finalCommand: string;
-            let env: NodeJS.ProcessEnv = {
-                ...process.env,
-                FORCE_COLOR: '1',
-                CLICOLOR_FORCE: '1',
-                CURE_COLOR: '1'
-            };
-
-            // Build environment variables for both TEST_METHOD and SUBTEST_FILTER
-            const envVars: string[] = [];
-            if (testMethod) {
-                env.TEST_METHOD = testMethod;
-                envVars.push(`TEST_METHOD='${testMethod}'`);
-            }
-            if (subtestFilter) {
-                env.SUBTEST_FILTER = subtestFilter;
-                envVars.push(`SUBTEST_FILTER='${subtestFilter}'`);
-            }
-
-            if (dockerExecMatch) {
-                const dockerCmd = dockerExecMatch[1];
-                const container = dockerExecMatch[2];
-                const restCommand = dockerExecMatch[3];
-
-                const envPart = envVars.map(v => {
-                    const [key, value] = v.split('=');
-                    const quotedValue = value.replace(/^'|'$/g, '').replace(/'/g, "'\\''");
-                    return `${key}='${quotedValue}'`;
-                }).join(' ');
-
-                finalCommand = `${dockerCmd} ${container} env ${envPart} ${restCommand} ${relativeFilePath}`;
-
-                run.appendOutput(`> ${finalCommand}\r\n`);
-            } else {
-                finalCommand = `${proveCommand} ${relativeFilePath}`;
-                const envPrefix = envVars.length > 0 ? envVars.join(' ') + ' ' : '';
-                run.appendOutput(`> ${envPrefix}${finalCommand}\r\n`);
-            }
-
+            run.appendOutput(`> ${displayCommand}\r\n`);
             run.appendOutput('\r\n');
 
             const startTime = Date.now();
