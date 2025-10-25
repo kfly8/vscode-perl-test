@@ -389,8 +389,9 @@ export class Test2SubtestController {
             const closeBraces = (line.match(/\}/g) || []).length;
             const netBraces = openBraces - closeBraces;
 
-            // Match Test::Class test methods: sub test_xxx : Test { ... }
-            const testClassMatch = line.match(/^\s*sub\s+(test_\w+)\s*:\s*Tests?\b/);
+            // Match Test::Class test methods: sub method_name : Test { ... }
+            // Supports non-ASCII characters (e.g., Japanese method names)
+            const testClassMatch = line.match(/^\s*sub\s+([^\s:]+)\s*:\s*Tests?\b/);
 
             if (testClassMatch) {
                 const name = testClassMatch[1];
