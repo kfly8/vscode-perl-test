@@ -2,7 +2,7 @@ use parent 'Test::Class';
 use Test2::V0;
 use Test2::Plugin::SubtestFilter;
 
-sub test_basic : Test {
+sub basic : Test {
     ok 1, 'simple test in Test::Class';
 }
 
