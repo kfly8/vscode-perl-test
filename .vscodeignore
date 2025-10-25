@@ -13,5 +13,9 @@ node_modules/**
 .claude/**
 hoge.md
 eslint.config.js
+vitest.config.ts
+vitest.config.js
+vitest.config.js.map
+coverage/**
 
 images/logo-original.png
