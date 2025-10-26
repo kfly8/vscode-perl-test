@@ -6,5 +6,10 @@ node_modules
 .DS_Store
 package-lock.json
 
+# Vitest
+vitest.config.js
+vitest.config.js.map
+coverage/
+
 test/local/
 test/cpanfile.snapshot

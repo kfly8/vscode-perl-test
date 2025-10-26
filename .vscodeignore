@@ -11,7 +11,12 @@ vsc-extension-quickstart.md
 **/*.ts
 node_modules/**
 .claude/**
+.github/**
 hoge.md
 eslint.config.js
+vitest.config.ts
+vitest.config.js
+vitest.config.js.map
+coverage/**
 
 images/logo-original.png

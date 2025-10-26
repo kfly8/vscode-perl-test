@@ -23,6 +23,6 @@ module.exports = [
     }
   },
   {
-    ignores: ["out/**", "node_modules/**", "*.d.ts", "eslint.config.js"]
+    ignores: ["out/**", "node_modules/**", "*.d.ts", "eslint.config.js", "vitest.config.js", "**/*.test.ts"]
   }
 ];
