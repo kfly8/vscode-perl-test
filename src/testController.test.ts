@@ -89,6 +89,160 @@ done_testing;
             });
         });
 
+        it('should find subtest with double quotes', () => {
+            const document = createMockDocument(`
+use Test2::V0;
+
+subtest "double quoted" => sub {
+    ok 1;
+};
+
+done_testing;
+`);
+
+            const subtests = (controller as any).findSubtests(document);
+
+            expect(subtests).toHaveLength(1);
+            expect(subtests[0]).toEqual({
+                name: 'double quoted',
+                line: 3,
+                path: [],
+                isTestClassMethod: false,
+            });
+        });
+
+        it('should find subtest with parentheses and fat comma', () => {
+            const document = createMockDocument(`
+use Test2::V0;
+
+subtest('paren fat comma' => sub {
+    ok 1;
+});
+
+done_testing;
+`);
+
+            const subtests = (controller as any).findSubtests(document);
+
+            expect(subtests).toHaveLength(1);
+            expect(subtests[0]).toEqual({
+                name: 'paren fat comma',
+                line: 3,
+                path: [],
+                isTestClassMethod: false,
+            });
+        });
+
+        it('should find subtest with parentheses and comma', () => {
+            const document = createMockDocument(`
+use Test2::V0;
+
+subtest('paren comma', sub {
+    ok 1;
+});
+
+done_testing;
+`);
+
+            const subtests = (controller as any).findSubtests(document);
+
+            expect(subtests).toHaveLength(1);
+            expect(subtests[0]).toEqual({
+                name: 'paren comma',
+                line: 3,
+                path: [],
+                isTestClassMethod: false,
+            });
+        });
+
+        it('should find subtest with parenthesized bareword', () => {
+            const document = createMockDocument(`
+use Test2::V0;
+
+subtest(bareword => sub {
+    ok 1;
+});
+
+done_testing;
+`);
+
+            const subtests = (controller as any).findSubtests(document);
+
+            expect(subtests).toHaveLength(1);
+            expect(subtests[0]).toEqual({
+                name: 'bareword',
+                line: 3,
+                path: [],
+                isTestClassMethod: false,
+            });
+        });
+
+        it('should find subtest with non-ASCII bareword', () => {
+            const document = createMockDocument(`
+use Test2::V0;
+
+subtest ううう => sub {
+    ok 1;
+};
+
+done_testing;
+`);
+
+            const subtests = (controller as any).findSubtests(document);
+
+            expect(subtests).toHaveLength(1);
+            expect(subtests[0]).toEqual({
+                name: 'ううう',
+                line: 3,
+                path: [],
+                isTestClassMethod: false,
+            });
+        });
+
+        it('should find subtest with emoji in name', () => {
+            const document = createMockDocument(`
+use Test2::V0;
+
+subtest '🎉🎊' => sub {
+    ok 1;
+};
+
+done_testing;
+`);
+
+            const subtests = (controller as any).findSubtests(document);
+
+            expect(subtests).toHaveLength(1);
+            expect(subtests[0]).toEqual({
+                name: '🎉🎊',
+                line: 3,
+                path: [],
+                isTestClassMethod: false,
+            });
+        });
+
+        it('should find subtest with special characters in name', () => {
+            const document = createMockDocument(`
+use Test2::V0;
+
+subtest 'test: with => special { chars }' => sub {
+    ok 1;
+};
+
+done_testing;
+`);
+
+            const subtests = (controller as any).findSubtests(document);
+
+            expect(subtests).toHaveLength(1);
+            expect(subtests[0]).toEqual({
+                name: 'test: with => special { chars }',
+                line: 3,
+                path: [],
+                isTestClassMethod: false,
+            });
+        });
+
         it('should find nested subtests', () => {
             const document = createMockDocument(`
 use Test2::V0;

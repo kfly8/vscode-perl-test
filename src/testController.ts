@@ -381,10 +381,18 @@ export class Test2SubtestController {
             }
 
             // Match subtest declarations with various quote styles or bare words
-            const subtestMatch = line.match(/^\s*subtest\s+(?:['"](.+?)['"]|(\w+))\s*=>\s*sub\s*\{/);
+            // Supported patterns:
+            // 1. subtest 'name' => sub { }    - quoted with fat comma
+            // 2. subtest "name" => sub { }    - double quoted with fat comma
+            // 3. subtest('name' => sub { })   - parenthesized with quoted name and fat comma
+            // 4. subtest('name', sub { })     - parenthesized with quoted name and comma
+            // 5. subtest name => sub { }      - bareword (ASCII/Unicode) with fat comma
+            // 6. subtest(name => sub { })     - parenthesized with bareword and fat comma
+            const subtestMatch = line.match(/^\s*subtest\s*\(?\s*(?:(['"])(.+?)\1|([^\s,=>()]+))\s*(?:=>|,)\s*sub\s*\{/);
 
             if (subtestMatch) {
-                const name = subtestMatch[1] || subtestMatch[2];  // Handle both quoted and bare word groups
+                // Group 2: quoted string content, Group 3: bareword
+                const name = subtestMatch[2] || subtestMatch[3];
                 const currentPath = nestingStack.map(item => item.info.name);
 
                 const subtestInfo: SubtestInfo = {
