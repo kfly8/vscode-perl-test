@@ -8,7 +8,6 @@ Run Perl tests with ease - directly from your editor with visual feedback!
 
 - **Gutter Decorations**: Test status icons (✓/✗) appear in the editor gutter
 - **Selective Test Execution**: Run individual subtests or Test::Class methods
-- **ANSI Color Support**: Full color output with Test2::Formatter::Cute and other formatters
 
 ## Selective Test Execution
 
