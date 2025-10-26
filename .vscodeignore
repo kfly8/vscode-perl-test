@@ -11,6 +11,7 @@ vsc-extension-quickstart.md
 **/*.ts
 node_modules/**
 .claude/**
+.github/**
 hoge.md
 eslint.config.js
 vitest.config.ts
