@@ -5,6 +5,20 @@ All notable changes to the "test2-subtest-filter" extension will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.6] - 2025-10-26
+
+### Added
+- GitHub Actions workflow for automatic VSCode extension publishing
+- Comprehensive test suite using Vitest framework
+- GitHub Actions CI/CD workflow for running tests across multiple platforms (Ubuntu, macOS, Windows)
+- Test coverage for subtest parsing patterns and command generation
+- Support for multiple subtest declaration patterns including non-ASCII characters and emoji
+
+### Changed
+- Deferred color output support for better compatibility
+- Refactored Perl test command-building logic into dedicated `commandBuilder.ts` module
+- Improved command generation for various execution contexts (plain, carton, docker, docker-compose)
+
 ## [0.0.5] - 2025-10-24
 
 ### Fixed
