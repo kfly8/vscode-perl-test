@@ -2,7 +2,7 @@
 
 Run Perl tests with ease - directly from your editor with visual feedback!
 
-<img width="512" height="496" alt="cover" src="https://github.com/user-attachments/assets/0381129c-301b-4463-b0dc-477e0145bdf6" />
+<img src="https://raw.githubusercontent.com/kfly8/vscode-perl-test/main/images/demo.gif" alt="Demo" width="600" />
 
 ## Features
 
